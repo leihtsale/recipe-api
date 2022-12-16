@@ -15,6 +15,9 @@ class UserManger(BaseUserManager):
         Create, save, and return a new user
         **kwargs - For extra fields
         """
+        if not email:
+            raise ValueError('Email address is required.')
+
         user = self.model(email=self.normalize_email(email), **kwargs)
 
         # password is set here for hashing
