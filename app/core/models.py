@@ -15,7 +15,7 @@ class UserManger(BaseUserManager):
         Create, save, and return a new user
         **kwargs - For extra fields
         """
-        user = self.model(email=email, **kwargs)
+        user = self.model(email=self.normalize_email(email), **kwargs)
 
         # password is set here for hashing
         user.set_password(password)
