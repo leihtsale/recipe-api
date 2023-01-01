@@ -15,7 +15,7 @@ def create_user(**kwargs):
     """
     Helper function to create and return a new user
     """
-    return get_user_model().objects.create_user(kwargs)
+    return get_user_model().objects.create_user(**kwargs)
 
 
 class PublicUserApiTests(TestCase):
