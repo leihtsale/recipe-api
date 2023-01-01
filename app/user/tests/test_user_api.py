@@ -9,6 +9,7 @@ from rest_framework import status
 
 
 CREATE_USER_URL = reverse('user:create')
+TOKEN_URL = reverse('user:token')
 
 
 def create_user(**kwargs):
@@ -29,8 +30,8 @@ class PublicUserApiTests(TestCase):
 
     def test_create_user_success(self):
         """
-        Test for creating a user and is successful,
-        should return a 201 response
+        Successful user creation
+        should return an OK response
         """
         payload = {
             'email': 'test@example.com',
@@ -47,8 +48,8 @@ class PublicUserApiTests(TestCase):
 
     def test_user_with_email_exists_error(self):
         """
-        Test if the email exists,
-        should return a 400 response
+        Trying to create a user with the same email
+        should return a bad request
         """
         payload = {
             'email': 'test@example.com',
@@ -62,8 +63,8 @@ class PublicUserApiTests(TestCase):
 
     def test_password_too_short_error(self):
         """
-        Test if the password is less than 5 characters,
-        should return a 400 response
+        Password with less than 5 characters
+        should return a bad request
         """
         payload = {
             'email': 'test@example.com',
@@ -80,3 +81,8 @@ class PublicUserApiTests(TestCase):
         ).exists()
 
         self.assertFalse(is_user_exists)
+
+    def test_create_token_for_user(self):
+        """
+        Valid credentials should generate token
+        """
