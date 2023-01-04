@@ -1,6 +1,8 @@
 """
 Tests for models
 """
+from decimal import Decimal
+from core import models
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
@@ -54,3 +56,24 @@ class ModelTests(TestCase):
 
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+    def test_create_recipe(self):
+        """
+        Successful creation of recipe
+        title should match with the string
+        representation of the model
+        """
+        user = get_user_model().objects.create_user(
+            'test@example.com',
+            'testpass123'
+        )
+
+        recipe = models.Recipe.objects.create(
+            user=user,
+            title="Sample Recipe Title",
+            time_minutes=10,
+            price=Decimal('5.50'),
+            description="Sample Recipe Description",
+        )
+
+        self.assertEqual(str(recipe), recipe.title)
