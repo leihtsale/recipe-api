@@ -42,7 +42,7 @@ class UserManger(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     """
-    User in the system
+    Custom user model
     """
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
@@ -55,7 +55,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Recipe(models.Model):
-
+    """
+    Model for recipes
+    """
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
