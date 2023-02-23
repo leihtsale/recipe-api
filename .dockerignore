@@ -13,3 +13,7 @@ app/*/*/*/__pycache__/
 .env/
 .venv/
 venv/
+
+# Pipenv
+Pipfile
+Pipfile.lock
