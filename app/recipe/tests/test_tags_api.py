@@ -16,6 +16,7 @@ def detail_url(tag_id):
     """
     return reverse('recipe:tag-detail', args=[tag_id])
 
+
 def create_user(email='test@example.com', password='password1234'):
     """
     Helper function to create a user
@@ -98,7 +99,8 @@ class PrivateTagsApiTests(TestCase):
 
     def test_update_tag(self):
         """
-        Test for updating a tag.
+        Updating a tag by authenticated user
+        should return 200 - OK, and reflects on the database
         """
         tag = create_tag(user=self.user, name='After Dinner')
 
@@ -114,7 +116,9 @@ class PrivateTagsApiTests(TestCase):
 
     def test_delete_tag(self):
         """
-        Test for deleting a tag.
+        Deleting a tag by authenticated user
+        should return 204 - No Content, and
+        tag is removed in the database
         """
         tag = create_tag(user=self.user, name='Breakfast')
         url = detail_url(tag.id)
