@@ -246,7 +246,7 @@ class PrivateRecipeApiTests(TestCase):
     def test_create_recipe_with_new_tag(self):
         """
         Creating a new recipe with new tag/s
-        should return 200 - OK, and assign/create the
+        should return 201 - Created, and assign/create the
         new tags to the created recipe
         """
         payload = {
@@ -275,7 +275,7 @@ class PrivateRecipeApiTests(TestCase):
     def test_create_recipe_with_existing_tag(self):
         """
         Creating new recipe with existing tag and new tag
-        should return 200 - OK and assigns the tags/s
+        should return 201 - Created and assigns the tags/s
         to newly created recipe
         """
         tag_chicken = Tag.objects.create(name='Chicken', user=self.user)
@@ -287,7 +287,7 @@ class PrivateRecipeApiTests(TestCase):
         }
         res = self.client.post(RECIPES_URL, payload, format='json')
 
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         recipes = Recipe.objects.filter(user=self.user)
         self.assertEqual(recipes.count(), 1)
