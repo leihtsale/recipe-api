@@ -14,7 +14,7 @@ def detail_url(tag_id):
     """
     Create and return a tag detail url
     """
-    return reverse('recipe:tag-detail')
+    return reverse('recipe:tag-detail', args=[tag_id])
 
 def create_user(email='test@example.com', password='password1234'):
     """
