@@ -303,3 +303,54 @@ class PrivateRecipeApiTests(TestCase):
                 user=self.user
             )
             self.assertTrue(tag.exists())
+
+    def test_create_tag_update(self):
+        """
+        Updating a recipe with a tag that does not exists
+        should create that tag, and assign it to the recipe
+        return 200 - OK
+        """
+        recipe = create_recipe(user=self.user)
+        payload = {'tags': [{'name': 'Dessert'}]}
+        url = detail_url(recipe.id)
+        res = self.client.patch(url, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        dessert_tag = Tag.objects.get(user=self.user, name='Dessert')
+        self.assertIn(dessert_tag, recipe.tags.all())
+
+    def test_assign_existing_tag_update(self):
+        """
+        Updating a tag with existing tag
+        should assign that tag to the recipe
+        return 200 - OK
+        """
+        tag_dessert = Tag.objects.create(user=self.user, name='Dessert')
+        recipe = create_recipe(user=self.user)
+        recipe.tags.add(tag_dessert)
+
+        tag_dinner = Tag.objects.create(user=self.user, name='Dinner')
+        payload = {'tags': [{'name': 'Dinner'}]}
+        url = detail_url(recipe.id)
+        res = self.client.patch(url, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn(tag_dinner, recipe.tags.all())
+        self.assertNotIn(tag_dessert, recipe.tags.all())
+
+    def test_remove_tags(self):
+        """
+        Clearing the tags of a recipe
+        should return 200 - OK, and tags are removed
+        """
+        tag_dessert = Tag.objects.create(user=self.user, name='Dessert')
+        recipe = create_recipe(user=self.user)
+        recipe.tags.add(tag_dessert)
+
+        payload = {'tags': []}
+        url = detail_url(recipe.id)
+        res = self.client.patch(url, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(recipe.tags.count(), 0)
