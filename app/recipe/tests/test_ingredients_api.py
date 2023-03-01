@@ -93,7 +93,7 @@ class PrivateIngredientsApiTests(TestCase):
         Updating ingredient details
         should return 200 - OK, and reflects on the database
         """
-        ingredient = create_ingredient(self.user)
+        ingredient = create_ingredient(self.user, name='Sample')
         payload = {'name': 'New name'}
         url = detail_url(ingredient.id)
         res = self.client.patch(url, payload)
@@ -101,3 +101,18 @@ class PrivateIngredientsApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         ingredient.refresh_from_db()
         self.assertEqual(ingredient.name, payload['name'])
+
+    def test_delete_ingredient(self):
+        """
+        Deleting an ingredient
+        should return 204 - No content, and remove the ingredient
+        from the database
+        """
+        ingredient = create_ingredient(self.user, name='Sample')
+        url = detail_url(ingredient.id)
+        res = self.client.delete(url)
+
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+
+        ingredients = Ingredient.objects.filter(user=self.user)
+        self.assertFalse(ingredients.exists())
