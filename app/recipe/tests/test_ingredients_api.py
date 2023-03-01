@@ -18,7 +18,7 @@ def create_user(email='test@example.com', password='password1234'):
 
 
 def create_ingredient(user, **kwargs):
-    return Ingredient.objects.create(user, **kwargs)
+    return Ingredient.objects.create(user=user, **kwargs)
 
 
 class PublicIngredientsApiTests(TestCase):
