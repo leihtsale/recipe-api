@@ -372,7 +372,7 @@ class PrivateRecipeApiTests(TestCase):
             ],
         }
 
-        res = self.client.put(RECIPES_URL, payload, format='json')
+        res = self.client.post(RECIPES_URL, payload, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
@@ -407,7 +407,7 @@ class PrivateRecipeApiTests(TestCase):
                 {'name': 'Vinegar'}
             ],
         }
-        res = self.client.put(RECIPES_URL, payload, format='json')
+        res = self.client.post(RECIPES_URL, payload, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
