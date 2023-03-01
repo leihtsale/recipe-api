@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from core.models import Recipe, Tag
+from core.models import Recipe, Tag, Ingredient
 from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
 
@@ -354,3 +354,73 @@ class PrivateRecipeApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(recipe.tags.count(), 0)
+
+    def test_create_recipe_with_ingredients(self):
+        """
+        Creating a recipe with new ingredients
+        should create the recipe and the ingredients
+        and return 201 - Created
+        """
+        payload = {
+            'title': 'Adobo',
+            'time_minutes': 35,
+            'price': Decimal('3.50'),
+            'ingredients': [
+                {'name': 'Chicken'},
+                {'name': 'Onion'},
+                {'name': 'Vinegar'}
+            ],
+        }
+
+        res = self.client.put(RECIPES_URL, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        recipes = Recipe.objects.filter(user=self.user)
+        self.assertEqual(recipes.count(), 1)
+
+        recipe = recipes.first()
+        self.assertEqual(recipe.ingredients.count(), 3)
+
+        for ingredient in payload['ingredients']:
+            item = recipe.ingredients.filter(
+                name=ingredient['name'],
+                user=self.user,
+            )
+            self.assertTrue(item.exists())
+
+    def test_create_recipe_with_existing_ingredient(self):
+        """
+        Creating a recipe with existing ingredient
+        should create a recipe and assign the existing ingredient
+        should expect that there are no duplicated ingredient
+        to the recipe created, and return 201 - Created
+        """
+        ingredient = Ingredient.objects.create(user=self.user, name='Onion')
+        payload = {
+            'title': 'Adobo',
+            'time_minutes': 35,
+            'price': Decimal('3.50'),
+            'ingredients': [
+                {'name': 'Chicken'},
+                {'name': 'Onion'},
+                {'name': 'Vinegar'}
+            ],
+        }
+        res = self.client.put(RECIPES_URL, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        recipes = Recipe.objects.filter(user=self.user)
+        self.assertEqual(recipes.count(), 1)
+
+        recipe = recipes.first()
+        self.assertEqual(recipe.ingredients.count(), 3)
+        self.assertIn(ingredient, recipe.ingredients.all())
+
+        for ingredient in payload['ingredients']:
+            item = recipe.ingredients.filter(
+                name=ingredient['name'],
+                user=self.user
+            )
+            self.assertTrue(item.exists())
