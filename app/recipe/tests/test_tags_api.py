@@ -1,10 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import TestCase
+
 from rest_framework import status
 from rest_framework.test import APIClient
-from core.models import Tag
+
+from core.models import Tag, Recipe
 from recipe.serializers import TagSerializer
+
+from decimal import Decimal
 
 
 TAGS_URL = reverse('recipe:tag-list')
@@ -127,3 +131,60 @@ class PrivateTagsApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(tags.exists())
+
+    def test_filter_tags_assigned_to_recipes(self):
+        """
+        Listing ingredients with filter "assigned_only" = 1
+        should only return a list of tags
+        that are assigned to a recipe/s
+        """
+        lunch = create_tag(user=self.user, name='Lunch')
+        dinner = create_tag(user=self.user, name='Dinner')
+        recipe = Recipe.objects.create(
+            user=self.user,
+            title='Adobo',
+            time_minutes=30,
+            price=Decimal('4.50'),
+        )
+        recipe.tags.add(lunch)
+
+        query_params = {'assigned_only': 1}
+        res = self.client.get(TAGS_URL, query_params)
+
+        serialized_lunch = TagSerializer(lunch)
+        serialized_dinner = TagSerializer(dinner)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn(serialized_lunch.data, res.data)
+        self.assertNotIn(serialized_dinner.data, res.data)
+
+    def test_unique_filtered_tags(self):
+        """
+        Listing ingredients with filter "assigned_only" = 1
+        should only return a list of distinct ingredients
+        that are assigned to a recipe/s
+        This test just make sure that the list have no duplicated tags
+        returned in the list.
+        """
+        lunch = create_tag(user=self.user, name='Lunch')
+        create_tag(user=self.user, name='Dinner')
+        recipe_adobo = Recipe.objects.create(
+            user=self.user,
+            title='Adobo',
+            time_minutes=30,
+            price=Decimal('4.50'),
+        )
+        recipe_tinola = Recipe.objects.create(
+            user=self.user,
+            title='Tinola',
+            time_minutes=45,
+            price=Decimal('5.50'),
+        )
+        recipe_adobo.tags.add(lunch)
+        recipe_tinola.tags.add(lunch)
+
+        query_params = {'assigned_only': 1}
+        res = self.client.get(TAGS_URL, query_params)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)

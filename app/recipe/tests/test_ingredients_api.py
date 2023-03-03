@@ -1,9 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+
 from rest_framework import status
 from rest_framework.test import APIClient
-from core.models import Ingredient
+
+from decimal import Decimal
+
+from core.models import Ingredient, Recipe
 from recipe.serializers import IngredientSerializer
 
 
@@ -116,3 +120,60 @@ class PrivateIngredientsApiTests(TestCase):
 
         ingredients = Ingredient.objects.filter(user=self.user)
         self.assertFalse(ingredients.exists())
+
+    def test_filter_ingredients_assigned_to_recipes(self):
+        """
+        Listing ingredients with filter "assigned_only" = 1
+        should only return a list of ingredients
+        that are assigned to a recipe/s
+        """
+        onion = create_ingredient(user=self.user, name='Onion')
+        garlic = create_ingredient(user=self.user, name='Garlic')
+        recipe = Recipe.objects.create(
+            user=self.user,
+            title='Adobo',
+            time_minutes=30,
+            price=Decimal('4.50'),
+        )
+        recipe.ingredients.add(onion)
+
+        query_params = {'assigned_only': 1}
+        res = self.client.get(INGREDIENTS_URL, query_params)
+
+        serialized_onion = IngredientSerializer(onion)
+        serialized_garlic = IngredientSerializer(garlic)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn(serialized_onion.data, res.data)
+        self.assertNotIn(serialized_garlic.data, res.data)
+
+    def test_unique_filtered_ingredients(self):
+        """
+        Listing ingredients with filter "assigned_only" = 1
+        should only return a list of distinct ingredients
+        that are assigned to a recipe/s
+        This test just make sure that the list have no duplicated ingredients
+        returned in the list.
+        """
+        onion = Ingredient.objects.create(user=self.user, name='Onion')
+        Ingredient.objects.create(user=self.user, name='Garlic')
+        recipe_adobo = Recipe.objects.create(
+            user=self.user,
+            title='Adobo',
+            time_minutes=30,
+            price=Decimal('4.50'),
+        )
+        recipe_tinola = Recipe.objects.create(
+            user=self.user,
+            title='Tinola',
+            time_minutes=45,
+            price=Decimal('5.50'),
+        )
+        recipe_adobo.ingredients.add(onion)
+        recipe_tinola.ingredients.add(onion)
+
+        query_params = {'assigned_only': 1}
+        res = self.client.get(INGREDIENTS_URL, query_params)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
