@@ -495,6 +495,60 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(recipe.ingredients.count(), 0)
 
+    def test_filter_by_tags(self):
+        """
+        Filtering recipes by tag id
+        should return 200 - OK, and the filtered recipes
+        """
+        recipe_adobo = create_recipe(user=self.user, title='Adobo')
+        recipe_tinola = create_recipe(user=self.user, title='Tinola')
+        recipe_sisig = create_recipe(user=self.user, title='Sisig')
+
+        tag_lunch = Tag.objects.create(user=self.user, name='Lunch')
+        tag_chicken = Tag.objects.create(user=self.user, name='Chicken')
+
+        recipe_adobo.tags.add(tag_lunch)
+        recipe_tinola.tags.add(tag_chicken)
+
+        query_params = {'tags': f'{tag_lunch.id},{tag_chicken.id}'}
+        res = self.client.get(RECIPES_URL, query_params)
+
+        serialized_adobo = RecipeSerializer(recipe_adobo)
+        serialized_tinola = RecipeSerializer(recipe_tinola)
+        serialized_sisig = RecipeSerializer(recipe_sisig)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn(serialized_adobo.data, res.data)
+        self.assertIn(serialized_tinola.data, res.data)
+        self.assertNotIn(serialized_sisig.data, res.data)
+
+    def filter_by_ingredients(self):
+        """
+        Filtering recipes by ingredient id
+        should return 200 - OK, and the filtered recipes
+        """
+        recipe_adobo = create_recipe(user=self.user, title='Adobo')
+        recipe_tinola = create_recipe(user=self.user, title='Tinola')
+        recipe_sisig = create_recipe(user=self.user, title='Sisig')
+
+        onion = Ingredient.objects.create(user=self.user, name='Onion')
+        chayote = Ingredient.objects.create(user=self.user, name='Chayote')
+
+        recipe_adobo.ingredients.add(onion)
+        recipe_tinola.ingredients.add(chayote)
+
+        query_params = {'ingredients': f'{onion.id},{chayote.id}'}
+        res = self.client.get(RECIPES_URL, query_params)
+
+        serialized_adobo = RecipeSerializer(recipe_adobo)
+        serialized_tinola = RecipeSerializer(recipe_tinola)
+        serialized_sisig = RecipeSerializer(recipe_sisig)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn(serialized_adobo.data, res.data)
+        self.assertIn(serialized_tinola.data, res.data)
+        self.assertNotIn(serialized_sisig.data, res.data)
+
 
 class ImageUploadTests(TestCase):
     """
